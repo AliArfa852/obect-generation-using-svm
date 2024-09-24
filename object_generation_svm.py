@@ -8,6 +8,17 @@ from keras.applications import ResNet50
 from keras.applications.resnet import preprocess_input
 from keras.preprocessing.image import img_to_array
 from keras.models import Model
+import tensorflow as tf
+
+# Ensure TensorFlow uses the GPU
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        # Restrict TensorFlow to only allocate memory as needed
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(e)
 
 # 1. Load CIFAR-10 dataset
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
@@ -21,7 +32,7 @@ feature_extractor = Model(inputs=resnet.input, outputs=resnet.layers[-1].output)
 # 3. Extract features using ResNet50
 def extract_features(images):
     images = preprocess_input(images)  # Preprocess input for ResNet50
-    features = feature_extractor.predict(images)
+    features = feature_extractor.predict(images)  # Uses GPU if available
     return features.reshape(features.shape[0], -1)  # Flatten the features
 
 x_train_features = extract_features(x_train)
